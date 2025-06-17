@@ -6,7 +6,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
-import javax.imageio.spi.ServiceRegistry;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -18,6 +17,8 @@ public class Util {
     private static final String USERNAME = "admin";
     private static final String PASSWORD = "admin";
 
+    private SessionFactory sessionFactory;
+
     public Connection getConnection() {
         try {
             Class.forName(DRIVER);
@@ -26,24 +27,29 @@ public class Util {
             throw new RuntimeException("Ошибка подключения к базе данных", e);
         }
     }
-    private static final SessionFactory sessionFactory;
 
-    static {
+    public SessionFactory getSessionFactory() {
+        if (sessionFactory == null) {
+            initializeSessionFactory();
+        }
+        return sessionFactory;
+    }
+
+    private void initializeSessionFactory() {
         Configuration config = new Configuration();
 
-        // Базовые свойства
         Properties props = new Properties();
-        props.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
-        props.put(Environment.URL, "jdbc:mysql://localhost:3306/katapreproject");
-        props.put(Environment.USER, "admin");
-        props.put(Environment.PASS, "admin");
+        props.put(Environment.DRIVER, DRIVER);
+        props.put(Environment.URL, URL);
+        props.put(Environment.USER, USERNAME);
+        props.put(Environment.PASS, PASSWORD);
         props.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
         props.put(Environment.SHOW_SQL, "true");
         props.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
-        //props.put(Environment.HBM2DDL_AUTO, "update"); // update - создаёт/обновляет таблицы автоматически
+        //props.put(Environment.HBM2DDL_AUTO, "update");
 
         config.setProperties(props);
-        config.addAnnotatedClass(jm.task.core.jdbc.model.User.class); // Регистрация сущности
+        config.addAnnotatedClass(jm.task.core.jdbc.model.User.class);
 
         StandardServiceRegistry sr = new StandardServiceRegistryBuilder()
                 .applySettings(config.getProperties())
@@ -51,9 +57,4 @@ public class Util {
 
         sessionFactory = config.buildSessionFactory(sr);
     }
-
-    public static SessionFactory getSessionFactory() {
-        return sessionFactory;
-    }
-
 }

@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 public class UserDaoHibernateImpl implements UserDao {
     private static final Logger LOGGER = Logger.getLogger(UserDaoHibernateImpl.class.getName());
 
-    private static final SessionFactory SESSION_FACTORY = new Util().getSessionFactory();
+    private final SessionFactory SESSION_FACTORY = new Util().getSessionFactory();
 
     @Override
     public void createUsersTable() {
@@ -45,37 +45,26 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        Session session = null;
         Transaction transaction = null;
-        try {
-            session = SESSION_FACTORY.openSession();
+        try (Session session = SESSION_FACTORY.openSession()) {
             transaction = session.beginTransaction();
-
             User user = new User(name, lastName, age);
             session.save(user);
-
             transaction.commit();
             LOGGER.info("Пользователь '" + name + "' успешно сохранён.");
         } catch (Exception e) {
             LOGGER.severe("Ошибка добавления пользователя: " + e.getMessage());
-            if (transaction != null && transaction.isActive()) {
+            if (transaction != null) {
                 transaction.rollback();
-            }
-        } finally {
-            if (session != null) {
-                session.close();
             }
         }
     }
 
     @Override
     public void removeUserById(long id) {
-        Session session = null;
         Transaction transaction = null;
-        try {
-            session = SESSION_FACTORY.openSession();
+        try (Session session = SESSION_FACTORY.openSession()) {
             transaction = session.beginTransaction();
-
             User user = session.get(User.class, id);
             if (user != null) {
                 session.delete(user);
@@ -86,13 +75,8 @@ public class UserDaoHibernateImpl implements UserDao {
             }
         } catch (Exception e) {
             LOGGER.severe("Ошибка удаления пользователя: " + e.getMessage());
-
-            if (transaction != null && transaction.isActive()) {
+            if (transaction != null) {
                 transaction.rollback();
-            }
-        } finally {
-            if (session != null) {
-                session.close();
             }
         }
     }
@@ -109,25 +93,16 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
-        Session session = null;
         Transaction transaction = null;
-        try {
-            session = SESSION_FACTORY.openSession();
+        try (Session session = SESSION_FACTORY.openSession()) {
             transaction = session.beginTransaction();
-
             session.createQuery("DELETE FROM User").executeUpdate();
-
             transaction.commit();
             LOGGER.info("Все записи из таблицы users были удалены.");
         } catch (Exception e) {
             LOGGER.severe("Ошибка очистки таблицы: " + e.getMessage());
-
-            if (transaction != null && transaction.isActive()) {
+            if (transaction != null) {
                 transaction.rollback();
-            }
-        } finally {
-            if (session != null) {
-                session.close();
             }
         }
     }

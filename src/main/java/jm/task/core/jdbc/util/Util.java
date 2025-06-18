@@ -30,31 +30,27 @@ public class Util {
 
     public SessionFactory getSessionFactory() {
         if (sessionFactory == null) {
-            initializeSessionFactory();
+            Configuration config = new Configuration();
+
+            Properties props = new Properties();
+            props.put(Environment.DRIVER, DRIVER);
+            props.put(Environment.URL, URL);
+            props.put(Environment.USER, USERNAME);
+            props.put(Environment.PASS, PASSWORD);
+            props.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
+            props.put(Environment.SHOW_SQL, "true");
+            props.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
+            //props.put(Environment.HBM2DDL_AUTO, "update");
+
+            config.setProperties(props);
+            config.addAnnotatedClass(jm.task.core.jdbc.model.User.class);
+
+            StandardServiceRegistry sr = new StandardServiceRegistryBuilder()
+                    .applySettings(config.getProperties())
+                    .build();
+
+            sessionFactory = config.buildSessionFactory(sr);
         }
         return sessionFactory;
-    }
-
-    private void initializeSessionFactory() {
-        Configuration config = new Configuration();
-
-        Properties props = new Properties();
-        props.put(Environment.DRIVER, DRIVER);
-        props.put(Environment.URL, URL);
-        props.put(Environment.USER, USERNAME);
-        props.put(Environment.PASS, PASSWORD);
-        props.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
-        props.put(Environment.SHOW_SQL, "true");
-        props.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
-        //props.put(Environment.HBM2DDL_AUTO, "update");
-
-        config.setProperties(props);
-        config.addAnnotatedClass(jm.task.core.jdbc.model.User.class);
-
-        StandardServiceRegistry sr = new StandardServiceRegistryBuilder()
-                .applySettings(config.getProperties())
-                .build();
-
-        sessionFactory = config.buildSessionFactory(sr);
     }
 }
